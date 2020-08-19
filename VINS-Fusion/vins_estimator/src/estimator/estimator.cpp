@@ -308,7 +308,7 @@ void Estimator::processMeasurements()
             {
                 if(!initFirstPoseFlag)//如果没有初始化
                     initFirstIMUPose(accVector);
-                for(size_t i = 0; i < accVector.size(); i++)
+                for(size_t i = 0; i < accVector.size(); i++)//遍历buffer里所有加速度
                 {
                     double dt;
                     if(i == 0)
@@ -348,7 +348,8 @@ void Estimator::processMeasurements()
 }
 
 /*
- * 系统初始化前，将yaw角置零
+ *  系统初始化前，将平均加速度到重力方向的旋转yaw角置零(roll pith不为零)
+ *  同时将置零后的旋转赋值给Rs[0]
  * */
 void Estimator::initFirstIMUPose(vector<pair<double, Eigen::Vector3d>> &accVector)
 {
@@ -363,9 +364,9 @@ void Estimator::initFirstIMUPose(vector<pair<double, Eigen::Vector3d>> &accVecto
     }
     averAcc = averAcc / n;//平均加速度
     printf("averge acc %f %f %f\n", averAcc.x(), averAcc.y(), averAcc.z());
-    Matrix3d R0 = Utility::g2R(averAcc);
+    Matrix3d R0 = Utility::g2R(averAcc);//yaw角置零后的R
     double yaw = Utility::R2ypr(R0).x();
-    R0 = Utility::ypr2R(Eigen::Vector3d{-yaw, 0, 0}) * R0;
+    R0 = Utility::ypr2R(Eigen::Vector3d{-yaw, 0, 0}) * R0;//这里为什么又进行一次置零操作？
     Rs[0] = R0;
     cout << "init R0 " << endl << Rs[0] << endl;
     //Vs[0] = Vector3d(5, 0, 0);
@@ -383,16 +384,17 @@ void Estimator::initFirstPose(Eigen::Vector3d p, Eigen::Matrix3d r)
 void Estimator::processIMU(double t, double dt, const Vector3d &linear_acceleration, const Vector3d &angular_velocity)
 {
     if (!first_imu)
-    {
+    {//第一个imu进入将其值保存为初始值
         first_imu = true;
         acc_0 = linear_acceleration;
         gyr_0 = angular_velocity;
     }
-
+    //新帧进来，判断有没有对应的预积分类，如果没有则new一个预计分类
     if (!pre_integrations[frame_count])
     {
         pre_integrations[frame_count] = new IntegrationBase{acc_0, gyr_0, Bas[frame_count], Bgs[frame_count]};
     }
+
     if (frame_count != 0)
     {
         pre_integrations[frame_count]->push_back(dt, linear_acceleration, angular_velocity);
