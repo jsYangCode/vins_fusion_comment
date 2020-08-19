@@ -1,0 +1,11 @@
+<launch>
+  <node name="rvizvisualisation" pkg="rviz" type="rviz" output="log" args="-d $(find vins)/../config/vins_rviz_config.rviz" />
+
+    <node pkg="vins" type="vins_node" name="vins_estimator" output="screen" args="/home/gp/DenseSurfelMapping-VINS-supported/VINS-Fusion_ws/src/VINS-Fusion/config/kitti_odom/kitti_config00-02.yaml">
+    </node>
+    <!--/home/gp/DenseSurfelMapping-VINS-supported/VINS-Fusion_ws/src/VINS-Fusion/config/kitti_odom/kitti_config00-02.yaml-->
+
+   <!--node pkg="loop_fusion" type="loop_fusion_node" name="loop_fusion" output="screen" args="/home/gp/DenseSurfelMapping-VINS-supported/VINS-Fusion_ws/src/VINS-Fusion/config/kitti_odom/kitti_config00-02.yaml">
+   </node-->
+
+</launch>
