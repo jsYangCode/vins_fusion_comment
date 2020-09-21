@@ -1582,7 +1582,10 @@ void Estimator::fastPredictIMU(double t, Eigen::Vector3d linear_acceleration, Ei
 {
     double dt = t - latest_time;
     latest_time = t;
-    Eigen::Vector3d un_acc_0 = latest_Q * (latest_acc_0 - latest_Ba) - g;
+    //这里引用Sola的四元数动力学文章中的公式，由于加速度噪声相比实际加速度较小，因此忽略之；
+    //a_m=R^T(a_t-g_t)+a_bt+a_n(230) ===> a_t=R(a_m-a_bt-a_n)+g_t
+    //w_m=w_t+w_bt+w_n(231)  ===> w_t=w_m-w_bt-w_n
+    Eigen::Vector3d un_acc_0 = latest_Q * (latest_acc_0/*上一时刻的测量值*/ - latest_Ba) - g;
     Eigen::Vector3d un_gyr = 0.5 * (latest_gyr_0 + angular_velocity) - latest_Bg;
     latest_Q = latest_Q * Utility::deltaQ(un_gyr * dt);
     Eigen::Vector3d un_acc_1 = latest_Q * (linear_acceleration - latest_Ba) - g;
