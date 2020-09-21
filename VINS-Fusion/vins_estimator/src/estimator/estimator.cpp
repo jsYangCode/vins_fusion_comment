@@ -1582,17 +1582,18 @@ void Estimator::fastPredictIMU(double t, Eigen::Vector3d linear_acceleration, Ei
 {
     double dt = t - latest_time;
     latest_time = t;
+    //当前时刻PVQ的中值法离散形式
     //这里引用Sola的四元数动力学文章中的公式，由于加速度噪声相比实际加速度较小，因此忽略之；
     //a_m=R^T(a_t-g_t)+a_bt+a_n(230) ===> a_t=R(a_m-a_bt-a_n)+g_t
     //w_m=w_t+w_bt+w_n(231)  ===> w_t=w_m-w_bt-w_n
-    Eigen::Vector3d un_acc_0 = latest_Q * (latest_acc_0/*上一时刻的测量值*/ - latest_Ba) - g;
-    Eigen::Vector3d un_gyr = 0.5 * (latest_gyr_0 + angular_velocity) - latest_Bg;
-    latest_Q = latest_Q * Utility::deltaQ(un_gyr * dt);
-    Eigen::Vector3d un_acc_1 = latest_Q * (linear_acceleration - latest_Ba) - g;
-    Eigen::Vector3d un_acc = 0.5 * (un_acc_0 + un_acc_1);
-    latest_P = latest_P + dt * latest_V + 0.5 * dt * dt * un_acc;
+    Eigen::Vector3d un_acc_0/*i时刻的真实值*/ = latest_Q * (latest_acc_0/*i时刻的测量值*/ - latest_Ba) - g;
+    Eigen::Vector3d un_gyr = 0.5 * (latest_gyr_0/*i时刻的w_m*/ + angular_velocity/*i+1时刻的w_m*/) - latest_Bg/*i时刻的w_bt*/;
+    latest_Q = latest_Q * Utility::deltaQ(un_gyr * dt);//四元数的更新 重载*
+    Eigen::Vector3d un_acc_1 = latest_Q/*i+1时刻的更新值*/ * (linear_acceleration/*i+1时刻的测量值*/ - latest_Ba/*bias不变*/) - g;
+    Eigen::Vector3d un_acc = 0.5 * (un_acc_0 + un_acc_1);//中值积分
+    latest_P = latest_P + dt * latest_V + 0.5 * dt * dt * un_acc/*中值加速度*/;
     latest_V = latest_V + dt * un_acc;
-    latest_acc_0 = linear_acceleration;
+    latest_acc_0 = linear_acceleration;//保留上一时刻的a、w
     latest_gyr_0 = angular_velocity;
 }
 
