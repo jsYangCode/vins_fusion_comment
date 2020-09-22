@@ -58,13 +58,13 @@ void FeatureTracker::setMask()
 
     // prefer to keep features that are tracked for long time
     vector<pair<int, pair<cv::Point2f, int>>> cnt_pts_id;
-
-    for (unsigned int i = 0; i < cur_pts.size(); i++)
+               //跟踪次数       点       点id    
+    for (unsigned int i = 0; i < cur_pts.size(); i++)//第一帧跳过  非第一帧则组织点对
         cnt_pts_id.push_back(make_pair(track_cnt[i], make_pair(cur_pts[i], ids[i])));
 
     sort(cnt_pts_id.begin(), cnt_pts_id.end(), [](const pair<int, pair<cv::Point2f, int>> &a, const pair<int, pair<cv::Point2f, int>> &b)
          {
-            return a.first > b.first;
+            return a.first > b.first;//按照跟踪次数进行排序
          });
 
     cur_pts.clear();
@@ -78,7 +78,7 @@ void FeatureTracker::setMask()
             cur_pts.push_back(it.second.first);
             ids.push_back(it.second.second);
             track_cnt.push_back(it.first);
-            cv::circle(mask, it.second.first, MIN_DIST, 0, -1);
+            cv::circle(mask, it.second.first, MIN_DIST, 0, -1);//对跟踪到的点周围设置拒绝域(圆，控制点之间的距离)，以避免特征点簇拥
         }
     }
 }
@@ -95,7 +95,7 @@ map<int, vector<pair<int, Eigen::Matrix<double, 7, 1>>>> FeatureTracker::trackIm
 {
     TicToc t_r;
     cur_time = _cur_time;
-    cur_img = _img;
+    cur_img = _img;//左目图像
     row = cur_img.rows;
     col = cur_img.cols;
     cv::Mat rightImg = _img1;

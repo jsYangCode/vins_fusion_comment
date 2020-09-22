@@ -78,11 +78,11 @@ void sync_process()
             std_msgs::Header header;
             double time = 0;
             m_buf.lock();
-            if (!img0_buf.empty() && !img1_buf.empty())
+            if (!img0_buf.empty() && !img1_buf.empty())//首先判断数据buffer是否空
             {
                 double time0 = img0_buf.front()->header.stamp.toSec();
                 double time1 = img1_buf.front()->header.stamp.toSec();
-                // 0.003s sync tolerance
+                // 0.003s sync tolerance 进行时间戳检验
                 if(time0 < time1 - 0.003)
                 {
                     img0_buf.pop();
@@ -95,7 +95,7 @@ void sync_process()
                 }
                 else
                 {
-                    time = img0_buf.front()->header.stamp.toSec();
+                    time = img0_buf.front()->header.stamp.toSec();//将ros图像转为cv图像
                     header = img0_buf.front()->header;
                     image0 = getImageFromMsg(img0_buf.front());
                     img0_buf.pop();
@@ -106,7 +106,7 @@ void sync_process()
             }
             m_buf.unlock();
             if(!image0.empty())
-                estimator.inputImage(time, image0, image1);
+                estimator.inputImage(time, image0, image1);//开始进行双目图像处理
         }
         else
         {
